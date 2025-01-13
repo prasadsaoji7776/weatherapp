@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 2rem;
+        }
+        #weather-info {
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>Live Weather Tracker</h1>
+    <p>Enter a location to fetch weather data or use your current location.</p>
+    <input type="text" id="city" placeholder="Enter city name">
+    <button onclick="fetchWeather()">Get Weather</button>
+    <div id="weather-info"></div>
+
+    <script>
+        async function fetchWeather() {
+            const cityInput = document.getElementById('city').value;
+            const weatherInfoDiv = document.getElementById('weather-info');
+            const apiKey = 'c01f56382d3ef9e9e84df1abe271bff5'; // API key integrated
+
+            let url;
+            if (cityInput) {
+                url = `https://api.openweathermap.org/data/2.5/weather?q=${cityInput}&appid=${apiKey}&units=metric`;
+            } else if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    url = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric`;
+                    await fetchWeatherData(url);
+                });
+                return;
+            } else {
+                weatherInfoDiv.innerHTML = '<p>Location access is not enabled, and no city was entered.</p>';
+                return;
+            }
+
+            await fetchWeatherData(url);
+        }
+
+        async function fetchWeatherData(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Unable to fetch weather data.');
+                const data = await response.json();
+
+                const { name, weather, main } = data;
+                const description = weather[0].description;
+                const temperature = main.temp;
+
+                document.getElementById('weather-info').innerHTML = `
+                    <h3>Weather in ${name}</h3>
+                    <p>Description: ${description}</p>
+                    <p>Temperature: ${temperature} °C</p>
+                `;
+            } catch (error) {
+                document.getElementById('weather-info').innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
